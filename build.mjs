@@ -26,18 +26,22 @@ function writeSite(dir, provider) {
   );
 }
 
+// La cáscara siempre se revalida (si no, la CDN la sirve vieja hasta 5 min) y las mediciones nunca se cachean.
+const HEADERS = ['/sw.js', '/config.js', '/index.html', '/'].map((p) => `${p}\n  Cache-Control: no-cache\n`).join('')
+  + '/assets/*\n  Cache-Control: no-store\n';
+
 fs.rmSync(dist, { recursive: true, force: true });
 
 // Netlify: proxy con _redirects (status 200 = reescritura, no redirección).
 const netlify = path.join(dist, 'netlify');
 writeSite(netlify, 'netlify');
 fs.writeFileSync(path.join(netlify, '_redirects'), `/api/*  ${api}/api/:splat  200!\n`);
-fs.writeFileSync(path.join(netlify, '_headers'), `/sw.js\n  Cache-Control: no-cache\n/assets/*\n  Cache-Control: no-store\n`);
+fs.writeFileSync(path.join(netlify, '_headers'), HEADERS);
 
 // Cloudflare Pages: _redirects no admite destinos externos con 200, así que el proxy es una Pages Function.
 const cf = path.join(dist, 'cloudflare');
 writeSite(path.join(cf, 'public'), 'cloudflare');
-fs.writeFileSync(path.join(cf, 'public', '_headers'), `/sw.js\n  Cache-Control: no-cache\n/assets/*\n  Cache-Control: no-store\n`);
+fs.writeFileSync(path.join(cf, 'public', '_headers'), HEADERS);
 fs.mkdirSync(path.join(cf, 'functions', 'api'), { recursive: true });
 fs.writeFileSync(
   path.join(cf, 'functions', 'api', '[[path]].js'),

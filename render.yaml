@@ -20,6 +20,15 @@ services:
       - path: /sw.js
         name: Cache-Control
         value: no-cache
+      - path: /config.js
+        name: Cache-Control
+        value: no-cache
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
+      - path: /
+        name: Cache-Control
+        value: no-cache
       - path: /assets/*
         name: Cache-Control
         value: no-store
