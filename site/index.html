@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1f5f8b">
+  <title>Pan de Vida — Prueba de conexión</title>
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main>
+    <h1>Prueba de conexión</h1>
+    <p class="lead">Ayúdanos a elegir dónde alojar el nuevo sistema de Pan de Vida. La prueba dura cerca de un minuto y gasta menos de 0,5 MB de datos.</p>
+
+    <div id="offline-banner" class="banner" hidden></div>
+
+    <form id="form">
+      <label>Tu nombre o alias
+        <input name="alias" required maxlength="60" autocomplete="nickname">
+      </label>
+      <label>Provincia
+        <select name="province" required>
+          <option value="">— Elige —</option>
+          <option>Pinar del Río</option><option>Artemisa</option><option>La Habana</option>
+          <option>Mayabeque</option><option>Matanzas</option><option>Cienfuegos</option>
+          <option>Villa Clara</option><option>Sancti Spíritus</option><option>Ciego de Ávila</option>
+          <option>Camagüey</option><option>Las Tunas</option><option>Holguín</option>
+          <option>Granma</option><option>Santiago de Cuba</option><option>Guantánamo</option>
+          <option>Isla de la Juventud</option>
+        </select>
+      </label>
+      <label>¿Cómo estás conectado ahora?
+        <select name="network" required>
+          <option value="">— Elige —</option>
+          <option value="datos-moviles">Datos móviles (ETECSA)</option>
+          <option value="wifi-nauta">WiFi Nauta (zona WiFi)</option>
+          <option value="nauta-hogar">Nauta Hogar</option>
+          <option value="otro">Otro</option>
+        </select>
+      </label>
+      <label>¿Usas VPN ahora mismo?
+        <select name="vpn" required>
+          <option value="no">No</option>
+          <option value="si">Sí</option>
+        </select>
+      </label>
+      <button type="submit" id="start">Iniciar prueba</button>
+    </form>
+
+    <section id="progress" hidden>
+      <h2>Resultados</h2>
+      <ul id="steps"></ul>
+    </section>
+
+    <section id="actions" hidden>
+      <p id="send-status"></p>
+      <button type="button" id="copy">Copiar resultados</button>
+      <a id="whatsapp" class="button secondary" target="_blank" rel="noopener">Enviar por WhatsApp</a>
+      <div class="offline-test">
+        <h2>Último paso: sin conexión</h2>
+        <p>Activa el <strong>modo avión</strong> y vuelve a cargar esta página. Después desactívalo: los resultados se enviarán solos.</p>
+      </div>
+    </section>
+  </main>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

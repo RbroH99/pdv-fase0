@@ -1,0 +1,9 @@
+{
+  "name": "Pan de Vida — Prueba de conexión",
+  "short_name": "PDV Prueba",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f5f8b",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

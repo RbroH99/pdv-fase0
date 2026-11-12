@@ -1,0 +1,11 @@
+{
+  "apiUrl": "https://pdv-fase0-api.onrender.com",
+  "candidates": [
+    { "name": "render", "url": "https://pdv-fase0.onrender.com" },
+    { "name": "netlify", "url": "https://pdv-fase0.netlify.app" },
+    { "name": "cloudflare", "url": "https://pdv-fase0.pages.dev" }
+  ],
+  "storageImageUrl": "",
+  "youtubeVideoId": "jNQXAC9IVRw",
+  "whatsappNumber": ""
+}

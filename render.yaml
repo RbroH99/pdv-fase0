@@ -1,0 +1,29 @@
+# Blueprint de Render para la prueba de Fase 0.
+services:
+  - type: web
+    name: pdv-fase0-api
+    runtime: node
+    plan: free
+    rootDir: api
+    buildCommand: "true"
+    startCommand: node server.mjs
+    envVars:
+      - key: REPORTS_KEY
+        generateValue: true
+
+  - type: web
+    name: pdv-fase0
+    runtime: static
+    buildCommand: node build.mjs
+    staticPublishPath: dist/render
+    headers:
+      - path: /sw.js
+        name: Cache-Control
+        value: no-cache
+      - path: /assets/*
+        name: Cache-Control
+        value: no-store
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://pdv-fase0-api.onrender.com/api/*
