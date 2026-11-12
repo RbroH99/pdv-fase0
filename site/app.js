@@ -103,12 +103,16 @@
       r.form.alias + ' · ' + r.form.province + ' · ' + r.form.network + (r.form.vpn === 'si' ? ' · VPN' : ''),
       'Carga página: ' + (t.navigation ? t.navigation.loadMs + ' ms' : '?'),
       'Descarga: ' + (t.download.ok ? t.download.kbps + ' KB/s' : 'FALLÓ'),
-      'API vía proxy: ' + t.proxyPing.okCount + '/' + t.proxyPing.total + ' ok, mediana ' + t.proxyPing.medianMs + ' ms',
-      'API directa: ' + t.directPing.okCount + '/' + t.directPing.total,
+      'API ' + (C.apiRegion || '') + ' vía proxy: ' + t.proxyPing.okCount + '/' + t.proxyPing.total + ' ok, mediana ' + t.proxyPing.medianMs + ' ms',
+      'API ' + (C.apiRegion || '') + ' directa: ' + t.directPing.okCount + '/' + t.directPing.total + ', mediana ' + t.directPing.medianMs + ' ms'
+    ].concat(Object.keys(t.apis || {}).map(function (name) {
+      var a = t.apis[name];
+      return 'API ' + name + ': proxy ' + a.proxyPing.okCount + '/' + a.proxyPing.total + ' (' + a.proxyPing.medianMs + ' ms), directa ' + a.directPing.okCount + '/' + a.directPing.total + ' (' + a.directPing.medianMs + ' ms)';
+    })).concat([
       'Otros hosts: ' + t.candidates.map(function (c) { return c.name + (c.ok ? ' ok' : ' NO'); }).join(', '),
       'YouTube: ' + (t.youtubeThumb.ok ? 'ok' : 'NO') + ' · Almacenamiento: ' + (t.storage ? (t.storage.ok ? 'ok' : 'NO') : 'n/a'),
       'id: ' + r.id
-    ];
+    ]);
     return lines.join('\n');
   }
 
@@ -130,6 +134,39 @@
   }
 
   // ---------- pruebas ----------
+  function pingSeries(url, n, opts) {
+    var samples = [];
+    var seq = Promise.resolve();
+    for (var i = 0; i < n; i++) {
+      seq = seq.then(function () { return timedFetch(url, opts).then(function (r) { samples.push(r); }); });
+    }
+    return seq.then(function () {
+      var oks = samples.filter(function (s) { return s.ok; });
+      return { total: samples.length, okCount: oks.length, medianMs: median(oks.map(function (s) { return s.ms; })), samples: samples };
+    });
+  }
+
+  function runExtraApis(t) {
+    t.apis = {};
+    return (C.extraApis || []).reduce(function (p, api) {
+      return p.then(function () {
+        var res = {};
+        return timedFetch(api.proxyPath + '/ping', null, 90000).then(function (warm) {
+          res.warmup = warm;
+          return pingSeries(api.proxyPath + '/ping', 5);
+        }).then(function (proxy) {
+          res.proxyPing = proxy;
+          step('API ' + api.name + ' vía proxy', proxy.okCount === proxy.total, proxy.okCount + '/' + proxy.total + ', mediana ' + proxy.medianMs + ' ms');
+          return pingSeries(api.directUrl + '/api/ping', 3, { mode: 'cors' });
+        }).then(function (direct) {
+          res.directPing = { total: direct.total, okCount: direct.okCount, medianMs: direct.medianMs };
+          step('API ' + api.name + ' directa', direct.okCount > 0, direct.okCount + '/' + direct.total + ', mediana ' + direct.medianMs + ' ms');
+          t.apis[api.name] = res;
+        });
+      });
+    }, Promise.resolve());
+  }
+
   function runTests(form) {
     var report = {
       id: uid(),
@@ -164,7 +201,7 @@
     // 1. Despertar la API (Render Free se suspende): se mide aparte y no cuenta en la mediana.
     return timedFetch('/api/ping', null, 90000).then(function (warm) {
       t.warmup = warm;
-      step('API (primer contacto)', warm.ok, warm.ok ? warm.ms + ' ms' : (warm.error || warm.status));
+      step('API ' + (C.apiRegion || '') + ' (primer contacto)', warm.ok, warm.ok ? warm.ms + ' ms' : (warm.error || warm.status));
       // 2. Descarga de ~150 KB (tamaño objetivo del JS inicial del sistema nuevo).
       return timedFetch(bust('/assets/payload.bin'));
     }).then(function (dl) {
@@ -181,7 +218,7 @@
     }).then(function (samples) {
       var oks = samples.filter(function (s) { return s.ok; });
       t.proxyPing = { total: samples.length, okCount: oks.length, medianMs: median(oks.map(function (s) { return s.ms; })), samples: samples };
-      step('API vía proxy', oks.length === samples.length, oks.length + '/' + samples.length + ', mediana ' + t.proxyPing.medianMs + ' ms');
+      step('API ' + (C.apiRegion || '') + ' vía proxy', oks.length === samples.length, oks.length + '/' + samples.length + ', mediana ' + t.proxyPing.medianMs + ' ms');
       // 4. API directa (sin proxy), para saber si el backend también es accesible desde Cuba.
       var direct = [];
       var seq = Promise.resolve();
@@ -192,7 +229,10 @@
     }).then(function (direct) {
       var oks = direct.filter(function (s) { return s.ok; });
       t.directPing = { total: direct.length, okCount: oks.length, medianMs: median(oks.map(function (s) { return s.ms; })) };
-      step('API directa (informativo)', oks.length > 0, oks.length + '/' + direct.length);
+      step('API ' + (C.apiRegion || '') + ' directa', oks.length > 0, oks.length + '/' + direct.length + ', mediana ' + t.directPing.medianMs + ' ms');
+      // 4b. Otras regiones del backend, para comparar latencias desde Cuba.
+      return runExtraApis(t);
+    }).then(function () {
       // 5. Los demás candidatos de hosting, con una imagen de 1 px.
       return Promise.all(C.candidates.map(function (c) {
         return probeImage(c.url + '/probe.png').then(function (r) { return Object.assign({ name: c.name, url: c.url }, r); });

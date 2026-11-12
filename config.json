@@ -8,5 +8,13 @@
   ],
   "storageImageUrl": "",
   "youtubeVideoId": "jNQXAC9IVRw",
-  "whatsappNumber": ""
+  "whatsappNumber": "",
+  "apiRegion": "frankfurt",
+  "extraApis": [
+    {
+      "name": "virginia",
+      "proxyPath": "/api-us",
+      "directUrl": "https://pdv-fase0-api-us.onrender.com"
+    }
+  ]
 }

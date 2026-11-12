@@ -31,6 +31,13 @@ const rows = [...groups.entries()].sort().map(([key, rs]) => {
     'descarga (KB/s, mediana)': median(rs.map((r) => r.tests.download?.kbps)),
     'proxy ok %': proxy.length ? Math.round((100 * proxy.filter((s) => s.ok).length) / proxy.length) : null,
     'proxy ms (mediana)': median(proxy.filter((s) => s.ok).map((s) => s.ms)),
+    'directa ms (mediana)': median(rs.map((r) => r.tests.directPing?.medianMs)),
+    ...Object.fromEntries(
+      [...new Set(rs.flatMap((r) => Object.keys(r.tests.apis ?? {})))].flatMap((name) => [
+        [`${name} proxy ms`, median(rs.flatMap((r) => (r.tests.apis?.[name]?.proxyPing.samples ?? []).filter((s) => s.ok).map((s) => s.ms)))],
+        [`${name} directa ms`, median(rs.map((r) => r.tests.apis?.[name]?.directPing.medianMs))],
+      ])
+    ),
     'API directa ok': rs.filter((r) => r.tests.directPing?.okCount > 0).length + '/' + rs.length,
     'YouTube ok': rs.filter((r) => r.tests.youtubeThumb?.ok).length + '/' + rs.length,
     'offline ok': offline.filter((o) => rs.some((r) => r.id === o.runId)).length + '/' + rs.length,

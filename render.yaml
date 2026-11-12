@@ -4,12 +4,25 @@ services:
     name: pdv-fase0-api
     runtime: node
     plan: free
+    region: frankfurt
     rootDir: api
     buildCommand: "true"
     startCommand: node server.mjs
     envVars:
       - key: REPORTS_KEY
         generateValue: true
+
+  - type: web
+    name: pdv-fase0-api-us
+    runtime: node
+    plan: free
+    region: virginia
+    rootDir: api
+    buildCommand: "true"
+    startCommand: node server.mjs
+    envVars:
+      - key: REPORTS_KEY
+        sync: false
 
   - type: web
     name: pdv-fase0
@@ -36,3 +49,6 @@ services:
       - type: rewrite
         source: /api/*
         destination: https://pdv-fase0-api.onrender.com/api/*
+      - type: rewrite
+        source: /api-us/*
+        destination: https://pdv-fase0-api-us.onrender.com/api/*
